@@ -111,9 +111,10 @@ TOOLS_SCHEMA = [
 
 def main():
     llm = os.environ['LLM']
+    llm_orch = os.environ['LLM_ORCH']
     print("=== Local Terminal agent (type 'exit' to leave) ===")
     messages = [
-        {"role": "system", "content": "You are a helpful local CLI assistant. You can inspect the system and run tasks using your tools."}
+        {"role": "system", "content": "You are a helpful local CLI assistant. You can inspect the system and run tasks using your tools. As such check what the user requested and act on it. Never use dates"}
     ]
 
     while True:
@@ -123,7 +124,6 @@ def main():
 
         messages.append({"role": "user", "content": user_input})
 
-        # Chamada ao modelo local via Ollama
         response = ollama.chat(
             model=llm,
             messages=messages,
@@ -161,6 +161,13 @@ def main():
             # Re-submit history including tool logs for final evaluation
             response = ollama.chat(
                 model=llm,
+                messages=messages,
+                tools=TOOLS_SCHEMA
+            )
+        messages.append({"role": "system", "content": "Please parse all the results and present to user in the best way possible"})
+        print(f"Agent 🤖> Delivering final response...")
+        response = ollama.chat(
+                model=llm_orch,
                 messages=messages,
                 tools=TOOLS_SCHEMA
             )
